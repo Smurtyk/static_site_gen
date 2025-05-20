@@ -3,7 +3,7 @@ from leafnode import LeafNode
 
 
 class TextType(Enum):   # Markdown
-    TEXT = 'text'   # text
+    TEXT = 'text'       # text
     BOLD = 'bold'       # **text**
     ITALIC = 'italic'   # _text_
     CODE = 'code'       # `text`
@@ -26,6 +26,8 @@ def text_node_to_html_node(text_node):
             return LeafNode('img', None, {'src': text_node.url, 'alt': text_node.text})
         case _: raise ValueError('unsupported text type')
         
+def code_to_text_node(code):
+    return TextNode(code, TextType.CODE)        
 
 class TextNode():
     def __init__(self, text, type, url=None):

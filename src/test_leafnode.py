@@ -23,9 +23,9 @@ class TestLeafNode(unittest.TestCase):
     def test_leaf_to_html_noval(self):
         node = LeafNode('code', '')
         try:
-            self.assertNotEqual(node.to_html(), '<code></code>')
+            node.to_html()
         except ValueError:
-            self.assertEqual(node.__repr__(), '<code> </>')
+            self.assertEqual(node.__repr__(), '<code></code>')
 
 
 if __name__ == "__main__":

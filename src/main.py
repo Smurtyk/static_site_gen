@@ -1,4 +1,6 @@
 from textnode import TextNode, TextType
+from blocks import markdown_to_html_node
+
 
 def main():
     node1 = TextNode("Here's Jonny!", TextType.BOLD)
@@ -7,4 +9,7 @@ def main():
     print(node2)
     print(node1 == node2)
 
-main()
+
+if __name__ == '__main__':
+    main()
+    

@@ -1,10 +1,10 @@
 import unittest
 
 from textnode import TextType, TextNode
-from functions import split_nodes_delimiter
-from functions import extract_markdown_images, extract_markdown_links
-from functions import split_nodes_image, split_nodes_link
-from functions import text_to_textnodes
+from textnode_split import split_nodes_delimiter
+from textnode_split import extract_markdown_images, extract_markdown_links
+from textnode_split import split_nodes_image, split_nodes_link
+from textnode_split import text_to_text_nodes
 
 
 class TestSplitTextNodes(unittest.TestCase):
@@ -154,7 +154,7 @@ class TestSplitUrlNodes(unittest.TestCase):
 
 class TestTextToNodes(unittest.TestCase):
     def test_conv(self):
-        nodes = text_to_textnodes(
+        nodes = text_to_text_nodes(
              'This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)'
         )
         self.assertListEqual(

@@ -17,16 +17,17 @@ class HTMLNode():
         return ''
         
     def __repr__(self):
+        output = ''
         if self.tag:
             output = f'<{self.tag}>'
-        else:
-            output = '< >'
-
         if self.props:
             output = output[:-1] + f'{self.props_to_html()}>'
         if self.value:
-            output += f' {self.value}'
+            output += f'{self.value}'
         if self.children:
-            output += f' <{self.children}>'
-        return output + ' </>'
+            for child in self.children:
+                output += f'{child}'
+        if self.tag:
+            output += f'</{self.tag}>'
+        return output
     

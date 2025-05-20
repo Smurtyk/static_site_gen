@@ -3,7 +3,7 @@ import re
 from textnode import TextType, TextNode
 
 
-def text_to_textnodes(text):
+def text_to_text_nodes(text):
     nodes = [TextNode(text, TextType.TEXT)] # split function accepts list of nodes
     splits = [
         split_nodes_bold,
