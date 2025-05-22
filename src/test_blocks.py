@@ -15,8 +15,8 @@ This is the same paragraph on a new line
 
 - This is a list
 - with items
-"""
 
+"""
         blocks = markdown_to_blocks(md)
         self.assertEqual(
             blocks,
@@ -57,7 +57,6 @@ tag here
 This is another paragraph with _italic_ text and `code` here
 
 """
-
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
@@ -66,11 +65,11 @@ This is another paragraph with _italic_ text and `code` here
         )
 
     def test_header(self):
-        md = """### **Header 1**
+        md = """### **Header 1** 
+- - - only the first line of a header 'block' is processed, the rest are discarded
 
 ######     Header 2
 """
-
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
@@ -85,15 +84,27 @@ This is text that _should_ remain
 the **same** even with inline stuff
 ```   
 """
-
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
             html,
-            "<div><pre><code>\nThis is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+            "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
 
+    def test_empty_codeblocks(self):
+        md = """     #      Codebase       
+                \n\n\n\n\n\n\n
+    ```\n\n\n\n\n\n```   
 
+    ```\n\n\n\n\n\n```   
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><h1>Codebase</h1><pre><code></code></pre><pre><code></code></pre></div>",
+        )
+    
     def test_quote(self):
         md = """
 >**I am the danger.**
@@ -101,7 +112,6 @@ the **same** even with inline stuff
 >No. 
 >**I am the one who knocks!**
 """
-
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(
@@ -119,8 +129,6 @@ the **same** even with inline stuff
 2. list
 3. example
 """
-
-
         node = markdown_to_html_node(md)
         html = node.to_html()
         self.assertEqual(

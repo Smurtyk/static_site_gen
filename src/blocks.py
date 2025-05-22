@@ -1,7 +1,8 @@
+import re
 from enum import Enum
 
-from leafnode import LeafNode
-from parentnode import ParentNode
+from leafnode import LeafNode # HTML node with value and without children
+from parentnode import ParentNode # HTML node without value, but with children
 from textnode_split import text_to_text_nodes
 from textnode import text_node_to_html_node
 
@@ -14,17 +15,8 @@ class BlockType(Enum):
     UNORDERED = 'unordered_list'
     ORDERED = 'ordered_list'
 
-def markdown_to_blocks(markdown):
-    blocks = markdown.split('\n\n')
-    processed_blocks = []
-    for block in blocks:
-        stripped = block.strip()
-        if stripped != '':
-            processed_blocks.append(stripped)
-    return processed_blocks
-
 def block_to_block_type(block):
-    lines = block.split('\n')
+    lines = block_to_lines(block)
 
     # Heading: starts with 1-6 '#' followed by space
     if lines[0].startswith('#'):
@@ -51,29 +43,62 @@ def block_to_block_type(block):
 
     return BlockType.PARAGRAPH
 
+# returns appropriate convert_block_to_parent_node function based on block_type
+def block_type_to_html_func(type):
+    match type:
+        case BlockType.PARAGRAPH:
+            return paragraph_to_html_node
+        case BlockType.HEADING:
+            return heading_to_html_node
+        case BlockType.CODE:
+            return code_to_html_node
+        case BlockType.QUOTE:
+            return quote_to_html_node
+        case BlockType.UNORDERED:
+            return unordered_to_html_node
+        case BlockType.ORDERED:
+            return ordered_to_html_node
+
+def markdown_to_blocks(markdown):
+    # checks if the given text has any code in it, and if that code is marked correctly
+    blocks = markdown.split('```')
+    if len(blocks) == 1:
+        return split_text(blocks[0])
+    if len(blocks) % 2 == 0:
+        raise Exception('code block not terminated')
+    
+    processed_blocks = []
+    # splits blocks into text and code based on position, then splits text blocks further
+    for text_block, code_block in zip(blocks[::2], blocks[1::2]):
+        processed_blocks.extend(split_text(text_block))
+        # surrounds code blocks with ``` for further processing, since it got lost in .split('```')
+        processed_blocks.append(f'```{code_block}```')
+    # returns everything in the original order
+    return processed_blocks
+    
+# splits multiline text, without code, to separate blocks
+def split_text(text_block):
+    split_text = text_block.strip().split('\n\n')
+    processed = []
+    for text_segment in split_text:
+        stripped = text_segment.strip()
+        if stripped != '':
+            processed.append(stripped)
+    return processed
+
+# basicly calls all other functions, does the same thing as text_to_parent_node just on a bigger scale
 def markdown_to_html_node(markdown):
     html_nodes = []
     blocks = markdown_to_blocks(markdown)
-
     for block in blocks:
         block_type = block_to_block_type(block)
-        match block_type:
-            case BlockType.PARAGRAPH:
-                new_node = paragraph_to_html_node(block)
-            case BlockType.HEADING:
-                new_node = heading_to_html_node(block)
-            case BlockType.CODE:
-                new_node = code_to_html_node(block)
-            case BlockType.QUOTE:
-                new_node = quote_to_html_node(block)
-            case BlockType.UNORDERED:
-                new_node = unordered_to_html_node(block)
-            case BlockType.ORDERED:
-                new_node = ordered_to_html_node(block)
-        html_nodes.append(new_node)
-
+        to_html_func = block_type_to_html_func(block_type)
+        html_nodes.append(
+            to_html_func(block)
+        )
     return ParentNode('div', html_nodes)
 
+# extracts all html nodes from given text, then arranges them in a tree structure
 def text_to_parent_node(tag, text):
     html_nodes = []
     text_nodes = text_to_text_nodes(text)
@@ -84,38 +109,38 @@ def text_to_parent_node(tag, text):
     return ParentNode(tag, html_nodes)
 
 def block_to_lines(block):
-    return (line.strip() for line in block.split('\n'))
+    return [line.strip() for line in block.split('\n')]
 
 # deletes from each line everything before, and including, the first appearance of 'symbol' char
-def clean_lines(lines, symbol):
-    return (line.split(symbol, 1)[1].lstrip() for line in lines)
+def clean_lines(lines, symbol): 
+    return [line.partition(symbol)[2].lstrip() for line in lines] # if it doesnt find given symbol returns an empty string
 
+# handles regular paragraphs
 def paragraph_to_html_node(block):
     lines = block_to_lines(block)
     return text_to_parent_node('p', ' '.join(lines))
 
+# handles headings
+# only the first line of a heading block is processed, the rest are discarded
 def heading_to_html_node(block):
-    count = 1
-    for char in block[1:]:
-        if char == '#':
-            count += 1
-        else: break
-    tag = f'h{count}'
+    match = re.match(r'^(#{1,6})\s+(.*)', block)
+    count = len(match.group(1)) # num of '#' marks heading type and it's tag
+    return text_to_parent_node(f'h{count}', match.group(2).rstrip())
 
-    lines = block_to_lines(block[count+1:])
-    return text_to_parent_node(tag, ' '.join(lines))
-
-def code_to_html_node(code):
-    html_node = LeafNode('code', code[3:-3])
+# handles codeblocks
+def code_to_html_node(block):
+    html_node = LeafNode('code', block[3:-3].lstrip())
     return ParentNode('pre', [html_node])
 
+# handles quotations
 def quote_to_html_node(block):
-    lines = clean_lines(block_to_lines(block), '>')
+    lines = clean_lines(block_to_lines(block), '>') # removes '>' from the start of each line
     return text_to_parent_node('blockquote', ' '.join(lines))
 
+# handles lists (ul + ol)
 def list_to_html_node(tag, block):
     children = []
-    lines = clean_lines(block_to_lines(block), ' ')
+    lines = clean_lines(block_to_lines(block), ' ') # removes '- ' or 'N. ' from the start of each line
     for line in lines:
         children.append(
             text_to_parent_node('li', line)
