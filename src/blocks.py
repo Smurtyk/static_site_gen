@@ -73,6 +73,8 @@ def markdown_to_blocks(markdown):
         processed_blocks.extend(split_text(text_block))
         # surrounds code blocks with ``` for further processing, since it got lost in .split('```')
         processed_blocks.append(f'```{code_block}```')
+    # there should always be 1 more text block than there are code blocks
+    processed_blocks.extend(split_text(blocks[-1]))
     # returns everything in the original order
     return processed_blocks
     

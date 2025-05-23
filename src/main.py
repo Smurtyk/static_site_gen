@@ -1,15 +1,23 @@
-from textnode import TextNode, TextType
-from blocks import markdown_to_html_node
+import sys
+
+from generator import copy_dir, generate_filesystem
 
 
-def main():
-    node1 = TextNode("Here's Jonny!", TextType.BOLD)
-    print(node1.__repr__())
-    node2 = TextNode("Here's Jonny!", TextType.BOLD)
-    print(node2)
-    print(node1 == node2)
+SOURCE = 'static'
+MARKDOWN = 'content'
+TEMPLATE = 'template.html'
+DEST_PATH = 'docs'
+
+
+def main(basepath='/'):
+    # copy_dir removes everything from DEST_PATH every time it executes
+    # it gives no warning before deletion when forced is set to True
+    if copy_dir(SOURCE, DEST_PATH, forced=True): # returns True if it finishes execution
+        generate_filesystem(MARKDOWN, TEMPLATE, DEST_PATH, basepath)
 
 
 if __name__ == '__main__':
-    main()
-    
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
+    else:
+        main()
