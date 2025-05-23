@@ -85,7 +85,7 @@ def generate_filesystem(content_root_path, template_path, dest_root_path, basepa
         template = template.replace('{{ Content }}', content)
         if basepath != '/': # adjusts links in html for GitHub use
             template = template.replace('href="/', f'href="{basepath}')
-            template = template.replace('src="/', f'href="{basepath}')
+            template = template.replace('src="/', f'src="{basepath}')
 
         dest_dir = os.path.dirname(generated_path)
         if not os.path.isdir(dest_dir):
